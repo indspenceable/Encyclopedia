@@ -1,5 +1,7 @@
 require 'rubygame'
 require './input_handler'
+
+
 module Manager
   def self.run screen_size, display, event_handler, background_color, target_frames_per_second = 60
     screen = Rubygame::Screen.new screen_size
@@ -25,6 +27,7 @@ module Manager
       screen.update
       clock.tick
     end
+  rescue InputHandler::ManagerQuitError
   ensure
     Rubygame.quit
   end

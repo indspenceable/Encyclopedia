@@ -5,6 +5,8 @@ class InputHandler
   include Singleton
   include Rubygame::EventHandler::HasEventHandler
 
+  class ManagerQuitError < RuntimeError
+  end
   def register(e)
     @input_entities << e
   end
@@ -15,7 +17,7 @@ class InputHandler
     make_magic_hooks(
       {Rubygame::Events::KeyPressed => ->(owner, event){ @keys[event.key] = :pressed },
         Rubygame::Events::KeyReleased => ->(owner,event){ @keys[event.key] = :release },
-        Rubygame::Events::QuitRequested => ->(_,_){ raise "QUIT" }})
+        Rubygame::Events::QuitRequested => ->(_,_){ raise ManagerQuitError.new }})
   end
 
   def tick
