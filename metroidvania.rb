@@ -1,10 +1,11 @@
-require './input_handler.rb'
-require './entity.rb'
+require './model/model.rb'
+require './view/view.rb'
+require './controller/controller.rb'
 require './manager.rb'
-require './animator.rb'
 
-require './player.rb'
-require './game.rb'
 
-G = Game.new
-Manager.run [640,480], G,G, [255,255,255], 60
+
+M = Model::Model.new
+V = View::View.new [640,480], [255,255,255]
+C = Controller::Controller.new
+Manager.run M, V, C
