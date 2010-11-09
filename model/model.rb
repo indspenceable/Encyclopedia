@@ -13,11 +13,11 @@ module Model
     attr_reader :level
 
     def initialize
-      @level = Level.new 50,50
-      (20..25).each do |x|
-        @level.set(x,16)
-      end
-
+      @level = Level.load('assets/level1.yaml')
+      #@level = Level.new 50,50
+      #(20..25).each do |x|
+      #  @level.set(x,16)
+      #end
       @p = Player.new @level
       @input_entities = Set.new << @p
       @monsters = Set.new << (Monster.new @level)
@@ -25,6 +25,7 @@ module Model
       #lets precompute the background
     end
     def tick
+      #calculate overlaps
       entities.each do |e|
         e.tick
       end

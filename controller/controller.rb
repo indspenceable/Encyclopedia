@@ -5,7 +5,6 @@ module Controller
     #include Singleton
     include Rubygame::EventHandler::HasEventHandler
 
-    ManagerQuitError = Class.new(RuntimeError)
     def handle_events model
       @event_queue.each do |e|
         handle e
