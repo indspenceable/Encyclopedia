@@ -40,7 +40,7 @@ module View
       cache_level model.level unless @level_surf
       @level_surf.blit(@screen, [0,0]) 
       model.entities.each do |e|
-        @animator.animate(e, e.animation, @screen, e.pos)
+        @animator.animate(e, e.current_animation, @screen, e.pos)
       end
       @screen.update
     end

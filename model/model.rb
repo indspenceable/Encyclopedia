@@ -1,8 +1,10 @@
+require 'set'
 module Model
   def self.need f
     require File.join(File.dirname(File.expand_path(__FILE__)),f)
   end
   need 'level.rb'
+  need 'monster.rb'
   need 'player.rb'
 
   class Model
@@ -17,11 +19,15 @@ module Model
       end
 
       @p = Player.new @level
-      @entities = @input_entities = [@p]
+      @input_entities = Set.new << @p
+      @monsters = Set.new << (Monster.new @level)
+      @entities = @input_entities + @monsters
       #lets precompute the background
     end
     def tick
-      @p.tick
+      entities.each do |e|
+        e.tick
+      end
     end
   end
 end

@@ -43,7 +43,14 @@ module Model
         end
       end
     end
-
+    def flag sym
+      (@flags ||= Set.new) << sym
+    end
+    def flag? sym
+      (@flags ||= Set.new).include? sym
+    end
+    def unflag sym
+      (@flags ||= Set.new).delete(sym)
+    end
   end
-
 end
