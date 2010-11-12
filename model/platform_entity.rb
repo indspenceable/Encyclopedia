@@ -1,19 +1,20 @@
 module Model
   need 'entity.rb'
   class PlatformEntity < Entity
-    attr_accessor :pos
+    attr_accessor :pos, :direction
 
     GRAVITY = 0.3
     JUMP = -8
-    def initialize current_level, pos
+    def initialize model, current_level, pos
       @vel = [0,0]
       @pos = pos
       @level = current_level 
+      @model = model
     end
 
-    def apply_velocity
-      apply_x_velocity
-      apply_y_velocity
+    def apply_velocity 
+      apply_x_velocity 0.75, 1
+      apply_y_velocity 0.75, 1
     end
 
     def th
@@ -23,65 +24,84 @@ module Model
     def tw
       @level.TILE_SIZE[0]
     end
-    def apply_y_velocity
-      if @vel[1] > 0
+    def apply_y_velocity my_width, my_height
+      if @vel[1] >= 0
         new_y = @pos[1]+@vel[1]
-        tile_new_y = (new_y/th).to_i
-        tile_old_x = (@pos[0]/tw).to_i
-        tile_old_x_plus = ((@pos[0]/tw)+0.95).to_i
+        tile_new_y = (new_y/th).to_i + 1
+        tile_old_x = ((@pos[0]/tw)).to_i
+        tile_old_x_plus = ((@pos[0]/tw)+my_width-0.01).to_i
         #apply to floor
-        unless @level.occupied?(tile_old_x,tile_new_y+1) || (@level.occupied?(tile_old_x_plus,tile_new_y+1))
+        unless @level.occupied?(tile_old_x,tile_new_y) || (@level.occupied?(tile_old_x_plus,tile_new_y))
           @pos[1] = new_y
+          unflag :on_ground
+          unflag :touch_cieling
         else
-          @pos[1] = (tile_new_y)*th
+          @pos[1] = (tile_new_y-1)*th
           @vel[1] = 0
           flag :on_ground
+          unflag :touch_cieling
         end
       elsif @vel[1] < 0
         new_y = @pos[1]+@vel[1]
-        tile_new_y = (new_y/th).to_i
+        tile_new_y = (new_y/th).to_i()
         tile_old_x = ((pos[0])/tw).to_i
-        unless @level.occupied?(tile_old_x,tile_new_y)
+        tile_old_x_plus = ((pos[0]/tw)+my_width-0.01).to_i
+        unless @level.occupied?(tile_old_x,tile_new_y) || (@level.occupied?(tile_old_x_plus,tile_new_y))
           @pos[1] = new_y
+          unflag :on_ground
+          unflag :touch_cieling
         else
-          @pos[1] = (tile_new_y+1)*th
-          @vel[1] = 0
-          flag :on_ground
+          @pos[1] = (tile_new_y+1)*th 
+          @vel[1] *= 4.0/5
+          flag :touch_cieling
         end
       end 
     end
-    def apply_x_velocity
+    def apply_x_velocity my_width, my_height
       if @vel[0] > 0
         new_x = (@pos[0] + @vel[0])
-        tile_new_x = (new_x/tw).to_i+1
+        tile_new_x = ((new_x/tw)+my_width).to_i
         tile_old_y = (pos[1]/th)
-        tile_old_y_plus = ((pos[1]/th)+0.95)
+        tile_old_y_plus = ((pos[1]/th)+0.85)
         unless @level.occupied?(tile_new_x,tile_old_y) || @level.occupied?(tile_new_x,tile_old_y_plus)
           @pos[0] = new_x 
+          unflag :push_left
+          unflag :push_right
         else
-          @pos[0] = (tile_new_x-1)*tw
+          @pos[0] = (tile_new_x-my_width)*tw
           @vel[0] = 0
-          flag :right_wall
+          flag :push_left
         end
       elsif @vel[0] < 0
         new_x = (@pos[0] + @vel[0])
         tile_new_x = (new_x/tw).to_i
         tile_old_y = (pos[1]/th)
-        tile_old_y_plus = ((pos[1]/th)+0.95)
+        tile_old_y_plus = ((pos[1]/th)+0.85)
         unless @level.occupied?(tile_new_x,tile_old_y) || @level.occupied?(tile_new_x,tile_old_y_plus)
           @pos[0] = new_x 
+          unflag :push_right
+          unflag :push_left
         else
           @pos[0] = (tile_new_x+1)*tw
           @vel[0] = 0
-          flag :left_wall
+          flag :push_right
         end
+      else
+        unflag :push_right
+        unflag :push_left
       end
     end
 
     def move
       flag :move
-      @vel[0] += 0.9 if flag? :right
-      @vel[0] -= 0.9 if flag? :left
+      if flag? :right
+        @vel[0] += 0.9
+        @direction = :right
+      end
+      if flag? :left
+        @vel[0] -= 0.9
+        @direction = :left
+      end
     end
     def normalize_velocity
       if (@vel[1] < 0) && (flag? :unjump)
@@ -99,18 +119,24 @@ module Model
         end
       end
     end
-    def tick
-      @vel[1] += GRAVITY #unless flag? :on_ground
+    def jump
+      if flag? :jump
+        if flag? :on_ground
+          @vel[1] += JUMP
+        end
+      end
+    end
+    def apply_gravity
+      puts "APPLY GRAVITY"
+      @vel[1] += GRAVITY
+    end
+    def tick 
+      apply_gravity
       move
       apply_velocity
-      jump if flag? :jump
+      jump
       normalize_velocity
-      @flags.clear
-    end
-    def jump
-      if flag? :on_ground
-        @vel[1] += JUMP
-      end
+      #@flags.clear
     end
   end
 end

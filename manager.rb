@@ -8,7 +8,7 @@ module Manager
     clock.target_framerate = target_frames_per_second
 
     loop do
-      controller.handle_events model
+      controller.handle_events
 
       model.tick
 
@@ -21,3 +21,5 @@ module Manager
     Rubygame.quit
   end
 end
+
+

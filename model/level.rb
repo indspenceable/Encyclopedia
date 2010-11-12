@@ -2,27 +2,27 @@ require 'YAML'
 module Model
   class Level
     attr_reader :Width, :Height, :TILE_SIZE
-    def self.load fname
-      tiles = YAML.load_file fname
-      level = Level.new tiles.size, tiles[0].size
-      tiles.each_index do |x|
-        tiles[x].each_index do |y|
-          level.set x,y,tiles[x][y]
-        end
+    def self.load level_name
+      tiles = YAML.load_file "assets/levels/#{level_name}/tiles.yaml"
+      scripts = YAML.load_file "assets/levels/#{level_name}/scripts.yaml"
+      require "./assets/levels/#{level_name}/script_module.rb"
+      l = Level.new 
+      l.instance_variable_set(:@tiles, tiles)
+      l.instance_variable_set(:@scripts, scripts)
+      l.instance_variable_set(:@TILE_SIZE, [20,20])
+      mod = Levels.const_get(const_name = level_name.capitalize.to_sym)
+      l.extend mod
+
+      scripts.each_pair do |location, script|
+        puts "SCRIPT IS #{script} #{script.class} LOCATION IS #{location} #{location.class}"
+        l.send(script.to_sym, location)
       end
-      level
+
+      l.instance_variable_set(:@Width, tiles.length)
+      l.instance_variable_set(:@Height, tiles[0].length)
+      l
     end
-    def initialize width, height
-      @Width = width
-      @Height= height
-      @TILE_SIZE = [8,8]
-      @tiles = Array.new(width) { |x| Array.new(height) { |y| (y>20 && (x<20 || x>27)|| y > 25) } }
-    end
-    def set x,y, val
-      @tiles[x][y] = val
-    end
-    def setup_level
-    end
+    
     def occupied?(x,y,direction = :down)
       @tiles[x][y] == :full
     end

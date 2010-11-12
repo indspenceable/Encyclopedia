@@ -3,9 +3,7 @@ require './view/view.rb'
 require './controller/controller.rb'
 require './manager.rb'
 
-
-
 M = Model::Model.new
 V = View::View.new [640,480], [255,255,255]
-C = Controller::Controller.new
+C = Controller::Controller.new M
 Manager.run M, V, C

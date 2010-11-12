@@ -1,4 +1,3 @@
-require 'set'
 module Model
   need 'platform_entity.rb'
   class Monster < PlatformEntity
@@ -9,7 +8,7 @@ module Model
     def current_animation
       :slug
     end
-    def tick
+    def tick 
       @frame+=1
       flag :left if @frame < 5
       @frame = 0 if @frame > 20
