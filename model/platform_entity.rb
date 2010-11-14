@@ -17,13 +17,14 @@ module Model
       apply_y_velocity 0.75, 1
     end
 
-    def th
-      @level.TILE_SIZE[1]
+    def th; @level.TILE_SIZE[1]; end
+    def tw; @level.TILE_SIZE[0]; end
+    def convert_x x; x / tw; end
+    def convert_y y; y / th; end
+    def convert_pos p
+      [convert_x(p[0]), convert_y(p[1])]
     end
 
-    def tw
-      @level.TILE_SIZE[0]
-    end
     def apply_y_velocity my_width, my_height
       if @vel[1] >= 0
         new_y = @pos[1]+@vel[1]

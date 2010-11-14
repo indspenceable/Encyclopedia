@@ -9,6 +9,7 @@ module Model
     react_to :key_down_space, ->(_){flag :grab}
     react_to [:key_down_right, :key_down_left], ->(key){ flag key }
     react_to :key_down_p, ->(_){ @model.display_string = "Hello" }
+    react_to :key_down_up, ->(_){ @level.activate_at(convert_pos(@pos)) }
 
     def current_animation
       if flag? :climb

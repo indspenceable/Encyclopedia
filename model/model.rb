@@ -19,7 +19,7 @@ module Model
     end
 
     def initialize
-      @level = Level.load('level1')
+      @level = Level.load('level1', self)
       #@level = Level.new 50,50
       #(20..25).each do |x|
       #  @level.set(x,16)
@@ -42,7 +42,6 @@ module Model
       @effects = []
       rtn
     end
-
     def process_controller_input
       if @display_string
         @display_string = nil if @keys[:space] == :pressed

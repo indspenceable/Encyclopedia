@@ -1,11 +1,21 @@
 --- 
 ? 
+  - 6
   - 4
-  - 18
-: bird
+: hello
 
 ? 
   - 13
-  - 13
-: bird
+  - 2
+: read_sign
+
+? 
+  - 15
+  - 11
+: read_sign
+
+? 
+  - 16
+  - 11
+: read_sign
 
