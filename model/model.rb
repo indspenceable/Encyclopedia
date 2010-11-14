@@ -14,6 +14,9 @@ module Model
 
     attr_reader :keys
     attr_accessor :display_string
+    def focal_point
+      @p.pos
+    end
 
     def initialize
       @level = Level.load('level1')

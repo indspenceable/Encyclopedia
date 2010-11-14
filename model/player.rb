@@ -1,7 +1,6 @@
 require 'set'
 module Model
   need 'platform_entity.rb'
-  need 'punch.rb'
 
   class Player < PlatformEntity
     react_to :key_pressed_space, ->(_){ flag :jump }
@@ -43,8 +42,10 @@ module Model
             @vel[1] = JUMP
             unflag :last_jump_left
             flag :last_jump_right
+            @model.add_effect([:star, @pos.dup, true])
           elsif (flag? :push_left) && (!flag? :last_jump_left)
             @vel[1] = JUMP
+            @model.add_effect([:star, @pos.dup, true])
             unflag :last_jump_right
             flag :last_jump_left
           end

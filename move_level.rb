@@ -1,4 +1,3 @@
-
 module Gen
   def self.setup
     @level_name = ARGV[0]
