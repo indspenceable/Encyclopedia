@@ -30,7 +30,8 @@ module View
                        :bounce => [[2,1],4,6],
                         :static => [[2,2],4,3],
                         :star => [[2,3],4,7],
-                        :punch => [[2,4],4,7]
+                        :punch => [[2,4],4,7],
+                        :sign => [[4,0],1,1]
       })
       @animator.load_font('font.ttf',:font,12)
 
@@ -94,7 +95,7 @@ module View
 
       @level_surf.blit(@buffer,@scroll_offset)
 
-      model.entities.each do |e|
+      model.level.entities.each do |e|
         @animator.animate(e, e.current_animation, @buffer, convert_pos(e,e.pos,model.level.TILE_SIZE), e.direction==:left, model.display_string)
       end
 

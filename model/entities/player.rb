@@ -1,6 +1,6 @@
 require 'set'
 module Model
-  need 'platform_entity.rb'
+  require './model/entities/platform_entity.rb'
 
   class Player < PlatformEntity
     react_to :key_pressed_space, ->(_){ flag :jump }

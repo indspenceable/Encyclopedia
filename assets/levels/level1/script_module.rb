@@ -1,14 +1,15 @@
 module Levels
   module Level1
-    def hello pos
-      # Enter your script here.
+    def spawn_weevil pos
+      self.spawn(Model::Weevil, pos) do
+        
+      end
     end
     def read_sign pos
-      # Enter your script here.
-      self.on_activation(:text) do
-        puts "HELLO WORLD"
-        'hi'
+      self.on_activation(pos, :text) do
+        "This sign appears to be blank."
       end
+      self.spawn(Model::Sign, pos)
     end
 
   end

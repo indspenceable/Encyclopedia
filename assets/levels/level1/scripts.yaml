@@ -1,21 +1,21 @@
 --- 
 ? 
-  - 6
-  - 4
-: hello
-
-? 
-  - 13
   - 2
-: read_sign
+  - 20
+: spawn_weevil
 
 ? 
   - 15
-  - 11
+  - 15
 : read_sign
 
 ? 
-  - 16
-  - 11
-: read_sign
+  - 30
+  - 12
+: spawn_weevil
+
+? 
+  - 7
+  - 20
+: spawn_weevil
 

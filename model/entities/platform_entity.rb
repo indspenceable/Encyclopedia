@@ -1,5 +1,5 @@
 module Model
-  need 'entity.rb'
+  require './model/entities/entity.rb'
   class PlatformEntity < Entity
     attr_accessor :pos, :direction
 
@@ -22,7 +22,7 @@ module Model
     def convert_x x; x / tw; end
     def convert_y y; y / th; end
     def convert_pos p
-      [convert_x(p[0]), convert_y(p[1])]
+      [convert_x(p[0]).to_i, convert_y(p[1]).to_i]
     end
 
     def apply_y_velocity my_width, my_height
@@ -128,7 +128,6 @@ module Model
       end
     end
     def apply_gravity
-      puts "APPLY GRAVITY"
       @vel[1] += GRAVITY
     end
     def tick 

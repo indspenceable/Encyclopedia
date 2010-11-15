@@ -2,6 +2,7 @@ require 'YAML'
 module Model
   class Level
     attr_reader :Width, :Height, :TILE_SIZE
+    attr_reader :entities
     def initialize tiles, scripts, ts, model
       @tiles = tiles
       @scripts = scripts
@@ -9,6 +10,7 @@ module Model
       @model = model
 
       @active_locations = {}
+      @entities = []
     end
     def self.load level_name, model
       tiles = YAML.load_file "assets/levels/#{level_name}/tiles.yaml"
@@ -35,13 +37,22 @@ module Model
       @tiles[x][y] == :full
     end
 
-    def on_activation(location, pos, &block)
-      @active_locations[pos] = block
+    def on_activation(location, type = :action, &block)
+      @active_locations[location] =
+        case type
+        when :text
+          ->(){ @model.display_string = block.call() }
+        when :action
+          block
+        end
+    end
+
+    def spawn(klass, pos)
+      puts "Spawning... #{klass.name}"
+      entities << klass.new(@model, self, [@TILE_SIZE[0]*pos[0], @TILE_SIZE[1]*pos[1]])
     end
 
     def activate_at(pos)
-      puts "activate_at #{pos.inspect}"
-      puts "locations are #{@active_locations.inspect}"
       if @active_locations.key? pos
         @active_locations[pos].call()
       end

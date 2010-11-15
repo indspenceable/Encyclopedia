@@ -23,8 +23,8 @@ class Editor
     @filled_surf.blit(@level_surf, [x*16,y*16]) if :full == @level[x][y]
   end
 
-  Rules = { (/\Aread_(.*)\z/) => 'on_activation(pos, :text)',
-    (/\Aplace_(.*)\z/) => 'spawn(pos)' }
+  Rules = { (/\Aread_(.*)\z/) => [->(match){'on_activation(pos, :text)'}, '"This sign appears to be blank."'],
+    (/\Aspawn_(.*)\z/) => [->(match){ "spawn(Model::#{match[1].capitalize}, pos)"}, "" ] }
 
   def save
     Dir.mkdir "#{LEVEL_PATH}#{ARGV[0]}" unless File.directory?("#{LEVEL_PATH}#{ARGV[0]}")
@@ -32,20 +32,25 @@ class Editor
     File.open("#{LEVEL_PATH}#{ARGV[0]}/scripts.yaml", "w") { |file| file << YAML.dump(@scripts) }
     @scripts.values.uniq.each do |script|
       puts "SCRIPT IS #{script}"
-      unless File.exist?("#{LEVEL_PATH}#{ARGV[0]}/#{script}.rb")
+      unless File.exist?("#{LEVEL_PATH}#{ARGV[0]}/#{script}.rb") || script.strip ==
         File.open("#{LEVEL_PATH}#{ARGV[0]}/#{script}.rb", "w") do |file|
-          file << "def #{script} pos\n  # Enter your script here.\n"
+          file << "def #{script} pos\n"
+          any = false
           Rules.each_pair do |k,v|
             if script =~ k 
-              file << "  self.#{v} do\n"
-              file << "    #Enter your text here\n"
+              file << "  self.#{v[0].call k.match(script)} do\n"
+              file << "    #{v[1]}\n"
               file << "  end\n"
+              any = true
             end
           end
+          file << "Enter the code for this event here.\n" unless any
           file << "end"
         end
       end
     end
+    puts "*click*"
+    puts "Your level has been saved."
   end
 
   def edit_keypress e
@@ -75,7 +80,7 @@ class Editor
       if @current_script_name.size > 0
         @current_script_name = @current_script_name[0,@current_script_name.size-1]
       end
-    elsif /[a-zA-Z]/.match(e.string)
+    elsif /[a-zA-Z1-9]/.match(e.string)
       @current_script_name += e.string
     elsif e.key == :space || e.key == :minus
       @current_script_name += "_"
@@ -94,9 +99,12 @@ class Editor
       end
     elsif e.is_a? Rubygame::Events::MousePressed
       @current_script_name.strip!
-      @scripts[[@mx/tw,@my/th]] = @current_script_name
+      if @current_script_name == ""
+        @scripts.delete([@mx/tw,@my/th])
+      else
+        @scripts[[@mx/tw,@my/th]] = @current_script_name
+      end
       @mode = :edit
-      puts "Saved #{@current_script_name}"
       save
     end
   end
