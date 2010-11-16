@@ -12,7 +12,8 @@ module View
   class View
     def initialize screen_size, background
       @screen = Rubygame::Screen.new screen_size
-      @buffer = Rubygame::Surface.new [screen_size[0]*2, screen_size[1]*2]
+      @screen.fill background
+      #@buffer = Rubygame::Surface.new [screen_size[0]*2, screen_size[1]*2]
      
       @background = background
 
@@ -26,39 +27,66 @@ module View
                        :walk => [[0,1],2,10],
                        :slide => [[0,2],2,10],
                        :climb => [[0,3],2,10],
-                       :empty => [[0,4],1,10],
                        :bounce => [[2,1],4,6],
                         :static => [[2,2],4,3],
                         :star => [[2,3],4,7],
                         :punch => [[2,4],4,7],
-                        :sign => [[4,0],1,1]
-      })
+                        :sign => [[4,0],1,1],
+                        :door => [[5,0],1,1]
+      }) do
+        @screen.update
+      end
       @animator.load_font('font.ttf',:font,12)
 
       @animator.tile_set('tiles.png',
-                           [16,16],
-                           { :test => [0,4] })
+                         [16,16],
+                         { :full => [0,0],
+                           :empty => [4,0]})
       @view_box =  [30, screen_size[1]-200-30, screen_size[0]-60,200]
       @scroll_offset = [0,0]
       @translated_positions = Hash.new
+      @level_surfs = {}
     end
+
+    def slow_cache_level level, steps_to_complete
+      return if (@current_cache ||= Hash.new)[level] == :finished
+      #surface, total, current
+      surf, total, current = (@current_cache[level] ||= [Rubygame::Surface.new([level.Width*16, level.Height* 16]), level.Width*level.Height-1, 0])
+      steps_to_complete = total - current if total - current < steps_to_complete
+      steps_to_complete.times do |k|
+        y = (current+k)/level.Width
+        x = (current+k) % level.Width;
+        a = [16*x, 16*y]
+          current_tile = level.tile_at(x,y)
+        borders = 0
+        borders |= BORDER_UP if (y > 0) && level.tile_at(x,y-1) == current_tile
+        borders |= BORDER_DOWN if (y < level.Height-1) && level.tile_at(x,y+1) == current_tile
+        borders |= BORDER_RIGHT if (x > 0) && level.tile_at(x-1,y) == current_tile
+        borders |= BORDER_LEFT if (x < level.Width-1) && level.tile_at(x+1,y) == current_tile
+        @animator.place_tile(current_tile, borders, surf, a)
+      end
+      if current + steps_to_complete == total
+        @level_surfs[level] = surf
+        @current_cache[level] = :finished
+      else
+        @current_cache[level][2] += steps_to_complete
+      end
+    end
+
     def cache_level level
-      puts "LEVEL WIDTH IS #{level.Width}"
-      puts "LEVEL HEIGHT IS #{level.Height}"
-      @level_surf = Rubygame::Surface.new [level.Width*16,level.Height*16]
-      @level_surf.fill [0,0,255]
-      50.times do |x|
-        50.times do |y|
+      @level_surfs[level] = Rubygame::Surface.new [level.Width*16,level.Height*16]
+      @level_surfs[level].fill [0,0,255]
+      level.Width.times do |x|
+        level.Height.times do |y|
           a = [16*(x), 16*(y)]
-          if level.occupied?(x,y)
-            borders = 0
-            borders |= BORDER_UP if (y > 0) && level.occupied?(x,y-1)
-            borders |= BORDER_DOWN if (y < 49) && level.occupied?(x,y+1)
-            borders |= BORDER_RIGHT if (x > 0) && level.occupied?(x-1,y)
-            borders |= BORDER_LEFT if (x < 49) && level.occupied?(x+1,y)
-            @animator.place_tile(:test, borders, @level_surf, a)
-          end
-          @animator.animate(:h, :empty, @level_surf, a) unless level.occupied?(x,y)
+          current_tile = level.tile_at(x,y)
+          borders = 0
+          borders |= BORDER_UP if (y > 0) && level.tile_at(x,y-1) == current_tile
+          borders |= BORDER_DOWN if (y < level.Height-1) && level.tile_at(x,y+1) == current_tile
+          borders |= BORDER_RIGHT if (x > 0) && level.tile_at(x-1,y) == current_tile
+          borders |= BORDER_LEFT if (x < level.Width-1) && level.tile_at(x+1,y) == current_tile
+          @animator.place_tile(current_tile, borders, @level_surfs[level], a)
+          # @animator.animate(:h, :empty, @level_surfs[level], a) unless level.occupied?(x,y)
         end
       end
     end
@@ -74,6 +102,7 @@ module View
     def set_scroll_location model, level_tile_size
       @scroll_offset[0] = -model.focal_point[0]
       @scroll_offset[1] = -model.focal_point[1]
+    
       2.times do |x|
         @scroll_offset[x] = @scroll_offset[x]/level_tile_size[x] * 16
       end
@@ -83,36 +112,81 @@ module View
       @scroll_offset[1] = 0 if @scroll_offset[1] > 0
     end
 
+    def draw_level level
+      @level_surfs[level] ||= Rubygame::Surface.new [level.Width*16,level.Height*16]
+      (@level_fills ||= Hash.new)[level] ||= Set.new
+      start_x = -@scroll_offset[0].to_i/16
+      start_y = -@scroll_offset[1].to_i/16
+      @d_l_pos ||= [0,0]
+      (start_x..start_x+@screen.w/16).each do |x|
+        (start_y..start_y+@screen.h/16).each do |y|
+          @d_l_pos[0] = x
+          @d_l_pos[1] = y
+          unless @level_fills[level].include?(@d_l_pos)
+            @level_fills[level] << @d_l_pos
+            a = [16*(x), 16*(y)]
+            current_tile = level.tile_at(x,y)
+            borders = 0
+            borders |= BORDER_UP if (y > 0) && level.tile_at(x,y-1) == current_tile
+            borders |= BORDER_DOWN if (y < level.Height-1) && level.tile_at(x,y+1) == current_tile
+            borders |= BORDER_RIGHT if (x > 0) && level.tile_at(x-1,y) == current_tile
+            borders |= BORDER_LEFT if (x < level.Width-1) && level.tile_at(x+1,y) == current_tile
+            @animator.place_tile(current_tile, borders, @level_surfs[level], a)
+          end
+        end
+      end
+    end
 
     def draw model
       #TODO - clean into multiple methods
       @screen.fill @background
-      @buffer.fill @background
-      cache_level model.level unless @level_surf
+
+
+      #unless @level_surfs[model.level]
+      #  slow_cache_level model.level, 1000
+      #  @screen.fill [0,255,rand(256)]
+      #  @screen.update
+      #  return
+      #end
       middle = [0,0]
       #first, lets determine where we should scroll to
       set_scroll_location model, model.level.TILE_SIZE
 
-      @level_surf.blit(@buffer,@scroll_offset)
+      draw_level model.level
+      @level_surfs[model.level].blit(@screen,@scroll_offset)
+
+      model.level.statics.each do |s|
+        @animator.animate(s, 
+                          s.current_animation, 
+                          @screen, 
+                          convert_pos(s,s.pos,model.level.TILE_SIZE), 
+                          s.direction==:left, 
+                          s.animate || model.display_string)
+      end
 
       model.level.entities.each do |e|
-        @animator.animate(e, e.current_animation, @buffer, convert_pos(e,e.pos,model.level.TILE_SIZE), e.direction==:left, model.display_string)
+        @animator.animate(e, 
+                          e.current_animation, 
+                          @screen, 
+                          convert_pos(e,e.pos,model.level.TILE_SIZE), 
+                          e.direction==:left, 
+                          model.display_string)
       end
 
       @effects += model.get_effects
       @effects.each do |e|
-        @to_delete << e if @animator.animate(e, e[0], @buffer, convert_pos(e, e[1],model.level.TILE_SIZE), e[2]==:left, model.display_string)
+        @to_delete << e if @animator.animate(e, e[0], @screen, convert_pos(e, e[1],model.level.TILE_SIZE), e[2]==:left, model.display_string)
       end
       @effects -= @to_delete
       @to_delete.clear
 
       if model.display_string
         x,y,w,h = @view_box
-        @buffer.draw_box_s([x,y],[x+w,y+h],[0,255,255]) 
-        @animator.text(model.display_string, :font, @buffer, @view_box)
+        @screen.draw_box_s([x,y],[x+w,y+h],[0,255,255]) 
+        @animator.text(model.display_string, :font, @screen, @view_box)
       end
 
-      @buffer.blit(@screen,[0,0])
+      #@buffer.blit(@screen,[0,0])
       @screen.update
     end
   end

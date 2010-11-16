@@ -102,7 +102,7 @@ class Editor
       if @current_script_name == ""
         @scripts.delete([@mx/tw,@my/th])
       else
-        @scripts[[@mx/tw,@my/th]] = @current_script_name
+        @scripts[[@mx/tw + @offset[0],@my/th+@offset[1]]] = @current_script_name
       end
       @mode = :edit
       save
@@ -176,7 +176,7 @@ class Editor
         @selector.blit(@screen,[(@mx/tw)*tw,(@my/th)*th]) if @mode == :edit
         if @mode == :script
           @scripts.keys.each do |k|
-            @selector.blit(@screen,[k[0]*tw,k[1]*th])
+            @selector.blit(@screen,[(k[0]-@offset[0])*tw,(k[1]-@offset[1])*th])
           end
         end
       end

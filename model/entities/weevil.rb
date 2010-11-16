@@ -13,8 +13,9 @@ module Model
       super
       unflag @direction
       if flag? :push_right
-        puts "hi"
         @direction = :right 
+      elsif flag? :push_left
+        @direction = :left
       end
     end
   end

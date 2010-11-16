@@ -2,6 +2,7 @@ module Model
   require './model/entities/entity.rb'
   class PlatformEntity < Entity
     attr_accessor :pos, :direction
+    attr_accessor :level
 
     GRAVITY = 0.3
     JUMP = -8
@@ -12,9 +13,17 @@ module Model
       @model = model
     end
 
-    def apply_velocity 
-      apply_x_velocity 0.75, 1
-      apply_y_velocity 0.75, 1
+    #TODO fix these into parameters for the constructor!
+    def my_width 
+      0.75
+    end
+    def my_height
+      1
+    end
+
+    def apply_velocity
+      apply_x_velocity
+      apply_y_velocity
     end
 
     def th; @level.TILE_SIZE[1]; end
@@ -22,10 +31,10 @@ module Model
     def convert_x x; x / tw; end
     def convert_y y; y / th; end
     def convert_pos p
-      [convert_x(p[0]).to_i, convert_y(p[1]).to_i]
+      [(convert_x(p[0])+my_width/2).to_i, (convert_y(p[1])+my_height/2).to_i]
     end
 
-    def apply_y_velocity my_width, my_height
+    def apply_y_velocity 
       if @vel[1] >= 0
         new_y = @pos[1]+@vel[1]
         tile_new_y = (new_y/th).to_i + 1
@@ -58,7 +67,7 @@ module Model
         end
       end 
     end
-    def apply_x_velocity my_width, my_height
+    def apply_x_velocity
       if @vel[0] > 0
         new_x = (@pos[0] + @vel[0])
         tile_new_x = ((new_x/tw)+my_width).to_i

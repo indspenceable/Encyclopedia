@@ -1,10 +1,5 @@
 --- 
 ? 
-  - 2
-  - 20
-: spawn_weevil
-
-? 
   - 15
   - 15
 : read_sign
@@ -15,7 +10,17 @@
 : spawn_weevil
 
 ? 
-  - 7
-  - 20
-: spawn_weevil
+  - 16
+  - 6
+: spawn_bird
+
+? 
+  - 22
+  - 8
+: gabe
+
+? 
+  - 3
+  - 60
+: start
 

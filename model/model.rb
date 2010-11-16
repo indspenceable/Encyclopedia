@@ -3,8 +3,8 @@ module Model
   require './model/level.rb'
   require './model/entities/player.rb'
   require './model/entities/weevil.rb'
-  require './model/entities/static.rb'
-  require './model/entities/sign.rb'
+  require './model/entities/bird.rb'
+  require './model/static.rb'
 
   class Model
     attr_reader :level
@@ -15,18 +15,37 @@ module Model
       @p.pos
     end
 
-    def initialize
-      @level = Level.load('level1', self)
+    def initialize 
+      @levels = {}
+      @levels[:level1] = Level.load('level1', self)
+      #@level = @levels[:level1]
+      goto_level(:level1, :start)
+      
+      
       #@level = Level.new 50,50
       #(20..25).each do |x|
       #  @level.set(x,16)
       #end
       @p = Player.new self, @level, [100,100]
-      @level.entities << @p
+      goto_level(:level1, :start)
       #lets precompute the background
       @effects = []
 
       @keys = {}
+    end
+
+    def goto_level(level_name, location)
+      @levels[level_name] = Level.load(level_name.to_s, self) unless @levels.key? level_name
+      @level = @levels[level_name]
+
+      coords = @level.scripts.to_a.find{|v| v[1].to_sym == location}[0]
+
+      @level.make_active_level
+      if @p
+        @level.entities << @p
+        @p.level = @level
+        @p.pos = [@level.TILE_SIZE[0]*coords[0], @level.TILE_SIZE[1]*coords[1]]
+      end
     end
 
     def add_effect e

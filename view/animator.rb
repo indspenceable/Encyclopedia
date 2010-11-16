@@ -17,18 +17,41 @@ module View
     end
     def load_sprites image_name, tile_size, animation_hash
       surf = Rubygame::Surface.load("assets/#{image_name}")
-      reverse_surf = Rubygame::Surface.new [surf.w,surf.h]
-      reverse_surf.fill [0,255,0, 255]
+      reverse_surf = (Rubygame::Surface.new [surf.w,surf.h], surf.depth, surf.flags).to_display_alpha
 
-      tmp_surf = Rubygame::Surface.new tile_size
-  
+
       (surf.w.to_f/tile_size[0]).ceil.times do |x|
         (surf.h.to_f/tile_size[1]).ceil.times do |y|
-          #blit to the tmp surface
-          tmp_surf.fill [255, 0, 255]
-          tmp_surf.colorkey = [255, 0, 255]
+          yield
+          tmp_surf = (Rubygame::Surface.new tile_size, surf.depth, surf.flags).to_display_alpha
+          #puts "tmp at is #{tmp_surf.get_at(0,0).inspect} it should be epmty"if x == 0 && y == 0
+          tmp_surf.set_at([0,0],[0,0,0,0])
+          #puts "now tmp at is #{tmp_surf.get_at(0,0).inspect} now it should be transpaerent"if x == 0 && y == 0
+
           surf.blit(tmp_surf, [0,0], [x*tile_size[0],y*tile_size[1],tile_size[0],tile_size[1]])
-          tmp_surf.to_display_alpha.zoom([-1,1]).blit(reverse_surf, [x*tile_size[0],y*tile_size[1]])
+          #puts "nnnow tmp at is #{tmp_surf.get_at(0,0).inspect} it should NOT be transparent"if x == 0 && y == 0
+          tmp_surf.w.times do |cx|
+            tmp_surf.h.times do |cy|
+              color = tmp_surf.get_at(cx,cy)
+              color[3] = surf.get_at(x*tile_size[0]+cx,y*tile_size[1]+cy)[3]
+              tmp_surf.set_at([cx,cy],color)
+            end
+          end
+          #puts "after fix tmp at is #{tmp_surf.get_at(0,0).inspect} it should NOT be transparent"if x == 0 && y == 0
+          zoom = tmp_surf.zoom([-1,1])
+          #puts "zoom has #{zoom.get_at(tmp_surf.w-1,0).inspect}" if x==0 && y == 0
+          zoom.blit(reverse_surf, [x*tile_size[0],y*tile_size[1]])
+
+
+
+          zoom.w.times do |cx|
+            zoom.h.times do |cy|
+              color = reverse_surf.get_at(x*tile_size[0]+cx,y*tile_size[1]+cy)
+              color[3] = zoom.get_at(cx,cy)[3]
+              reverse_surf.set_at([x*tile_size[0]+cx,y*tile_size[1]+cy],color)
+            end
+          end
+          #puts "ANND reverse surf has #{reverse_surf.get_at(x*tile_size[0]+tmp_surf.w-1, y*tile_size[1])} at #{x*tile_size[0]} and #{y*tile_size[1]}" if x == 0 && y == 0
         end
       end
 
