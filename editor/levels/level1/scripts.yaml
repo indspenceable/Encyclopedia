@@ -1,0 +1,26 @@
+--- 
+? 
+  - 15
+  - 15
+: read_sign
+
+? 
+  - 30
+  - 12
+: spawn_weevil
+
+? 
+  - 16
+  - 6
+: spawn_bird
+
+? 
+  - 22
+  - 8
+: gabe
+
+? 
+  - 3
+  - 60
+: start
+

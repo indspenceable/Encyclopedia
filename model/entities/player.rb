@@ -35,23 +35,23 @@ module Model
     def jump
       if flag? :jump
         if flag? :on_ground
-          @vel[1] = JUMP
+          @vel[1] = jump_strength
           unflag :last_jump_left
           unflag :last_jump_right
         elsif (flag? :push_right) || (flag? :push_left)
           if (flag? :push_right)&& (!flag? :last_jump_right)
-            @vel[1] = JUMP
+            @vel[1] = jump_strength
             unflag :last_jump_left
             flag :last_jump_right
             @model.add_effect([:star, @pos.dup, true])
           elsif (flag? :push_left) && (!flag? :last_jump_left)
-            @vel[1] = JUMP
+            @vel[1] = jump_strength
             @model.add_effect([:star, @pos.dup, true])
             unflag :last_jump_right
             flag :last_jump_left
           end
         elsif (flag? :double_jump)
-          @vel[1] = JUMP
+          @vel[1] = jump_strength
           @model.add_effect([:bounce, @pos.dup, @direction])
           unflag :double_jump
         end

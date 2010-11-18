@@ -4,8 +4,19 @@ module Model
     attr_accessor :pos, :direction
     attr_accessor :level
 
-    GRAVITY = 0.3
-    JUMP = -8
+    GRAVITY = 0.02
+    #can jump 2.5 blocks
+     
+    JUMP_HEIGHT = 3
+    JUMP = -Math.sqrt(2.0*GRAVITY*JUMP_HEIGHT) -GRAVITY
+    def jump_strength
+      th * (-Math.sqrt(2.0*GRAVITY*JUMP_HEIGHT) -GRAVITY)
+    end
+#    JUMP = 
+      # y = starty(0) -JUMP*t +GRAVITY*t^2
+#      y = ((x^2)-JUMP(x)-JUMP^2/4)*GRAVITY + (JUMP^2/4)*GRAVITY
+
+
     def initialize model, current_level, pos
       @vel = [0,0]
       @pos = pos
@@ -142,9 +153,9 @@ module Model
     def tick 
       apply_gravity
       move
+      normalize_velocity
       apply_velocity
       jump
-      normalize_velocity
       #@flags.clear
     end
   end

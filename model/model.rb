@@ -17,9 +17,7 @@ module Model
 
     def initialize 
       @levels = {}
-      @levels[:level1] = Level.load('level1', self)
-      #@level = @levels[:level1]
-      goto_level(:level1, :start)
+      goto_level(:intro_chamber, :start)
       
       
       #@level = Level.new 50,50
@@ -27,7 +25,7 @@ module Model
       #  @level.set(x,16)
       #end
       @p = Player.new self, @level, [100,100]
-      goto_level(:level1, :start)
+      goto_level(:intro_chamber, :start)
       #lets precompute the background
       @effects = []
 

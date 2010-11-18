@@ -1,14 +1,18 @@
 require 'YAML'
 module Model
   class Level
-    attr_reader :Width, :Height, :TILE_SIZE
+    TILE_SIZE = [20,1]
+    def TILE_SIZE
+      TILE_SIZE
+    end
+    attr_reader :Width, :Height
     attr_reader :entities
     attr_reader :statics
     attr_reader :scripts
-    def initialize tiles, scripts, ts, model
+    def initialize tiles, scripts, model
       @tiles = tiles
       @scripts = scripts
-      @TILE_SIZE = ts
+      #@TILE_SIZE = ts
       @model = model
 
     end
@@ -16,7 +20,7 @@ module Model
       tiles = YAML.load_file "assets/levels/#{level_name}/tiles.yaml"
       scripts = YAML.load_file "assets/levels/#{level_name}/scripts.yaml"
       require "./assets/levels/#{level_name}/script_module.rb"
-      l = Level.new tiles, scripts, [20,20], model
+      l = Level.new tiles, scripts, model
       #l.instance_variable_set(:@tiles, tiles)
       #l.instance_variable_set(:@scripts, scripts)
       #l.instance_variable_set(:@TILE_SIZE, [20,20])
@@ -64,18 +68,15 @@ module Model
     end
 
     def spawn(klass, pos)
-      entities << klass.new(@model, self, [@TILE_SIZE[0]*pos[0], @TILE_SIZE[1]*pos[1]])
+      entities << klass.new(@model, self, [TILE_SIZE[0]*pos[0], TILE_SIZE[1]*pos[1]])
     end
     def add_static(pos, sym, direction = :left, animate = false)
-      statics << Static.new([@TILE_SIZE[0]*pos[0], @TILE_SIZE[1]*pos[1]], sym, direction, animate = false)
+      statics << Static.new([TILE_SIZE[0]*pos[0], TILE_SIZE[1]*pos[1]], sym, direction, animate = false)
     end
-
-
     def activate_at(pos)
       if @active_locations.key? pos
         @active_locations[pos].call()
       end
     end
-
   end
 end

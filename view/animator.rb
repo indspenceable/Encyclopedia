@@ -13,8 +13,12 @@ module View
       @tiles = {}
 
       @fonts = {}
-
     end
+
+    def transition
+     
+    end
+
     def load_sprites image_name, tile_size, animation_hash
       surf = Rubygame::Surface.load("assets/#{image_name}")
       reverse_surf = (Rubygame::Surface.new [surf.w,surf.h], surf.depth, surf.flags).to_display_alpha
