@@ -10,7 +10,7 @@ module Model
       2.3*th
     end
     def gravity
-      0.003*th
+      0.03*th
     end
     def jump_strength
       (-Math.sqrt(2.0*gravity*my_jump_strength) - gravity)
@@ -160,7 +160,7 @@ module Model
     def jump
       if flag? :jump
         if flag? :on_ground
-          @vel[1] += JUMP
+          @vel[1] += jump_strength
         end
       end
     end

@@ -42,7 +42,9 @@ module Model
     end
 
     def current_animation
-      if flag? :climb
+      if flag? :rock
+        :rock
+      elsif flag? :climb
         :climb
       elsif (flag? :push_right) && !(flag? :on_ground)
         :slide
@@ -63,7 +65,7 @@ module Model
       end
     end
     def jump
-      if flag? :jump
+      if (flag? :jump) && !(flag? :rock)
         if flag? :on_ground
           @vel[1] = jump_strength
           unflag :last_jump_left
@@ -105,7 +107,11 @@ module Model
         unflag :left
         unflag :right
       end
+      on_ground = flag? :on_ground
       super
+      if (!on_ground) && (flag? :on_ground)
+        @model.add_effect [:dust, @pos.dup, @direction]
+      end
       if flag? :punch
         npos = @pos.dup
         @model.add_effect [:punch, @pos.dup, @direction]
