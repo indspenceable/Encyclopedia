@@ -10,9 +10,12 @@ module Model
       :idle
     end
 
+    def my_jump_strength
+      1*th
+    end
     def jump
       if flag? :jump
-        @vel[1] = -3
+        @vel[1] = jump_strength
       end
     end
 
