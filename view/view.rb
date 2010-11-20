@@ -41,6 +41,7 @@ module View
                              [16,16],
                              { :walk => [[2,2],4,12],
                                :fall => [[7,1],2,12],
+                               :rock => [[6,1],1,20],
                                :jump => [[9,1],2,12] }) do
         @screen.update
         print "."
