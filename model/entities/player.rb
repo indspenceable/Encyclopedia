@@ -11,6 +11,17 @@ module Model
     react_to :key_pressed_up, ->(_){ @level.activate_at(convert_pos(@pos)) }
     react_to :key_down_r, ->(_){flag :run}
 
+    react_to :key_pressed_down, ->(_) { if flag? :rock; unflag :rock; else; flag :rock; end }
+
+
+    def gravity
+      if flag? :rock
+        0.3*th
+      else
+        super
+      end
+    end
+
     def max_walk
       5
     end
@@ -33,9 +44,9 @@ module Model
     def current_animation
       if flag? :climb
         :climb
-      elsif (flag? :push_left) && !(flag? :on_ground)
-        :slide
       elsif (flag? :push_right) && !(flag? :on_ground)
+        :slide
+      elsif (flag? :push_left) && !(flag? :on_ground)
         :slide
       elsif @vel[1] < 0
         #jump
@@ -58,14 +69,14 @@ module Model
           unflag :last_jump_left
           unflag :last_jump_right
           return
-        elsif (flag? :push_right) || (flag? :push_left)
-          if (flag? :push_right)&& (!flag? :last_jump_right)
+        elsif (flag? :push_left) || (flag? :push_right)
+          if (flag? :push_left)&& (!flag? :last_jump_right)
             @vel[1] = jump_strength
             unflag :last_jump_left
             flag :last_jump_right
             @model.add_effect([:star, @pos.dup, true])
             return
-          elsif (flag? :push_left) && (!flag? :last_jump_left)
+          elsif (flag? :push_right) && (!flag? :last_jump_left)
             @vel[1] = jump_strength
             @model.add_effect([:star, @pos.dup, true])
             unflag :last_jump_right
@@ -90,12 +101,16 @@ module Model
       end
     end
     def tick 
+      if flag? :rock
+        unflag :left
+        unflag :right
+      end
       super
       if flag? :punch
         npos = @pos.dup
         @model.add_effect [:punch, @pos.dup, @direction]
       end
-      @model.add_effect [:static, @pos.dup, @direction] if (flag? :push_left)||(flag? :push_right)
+      @model.add_effect [:static, @pos.dup, @direction] if (flag? :push_right)||(flag? :push_left)
       @model.add_effect [:dust, @pos.dup, @direction] if (flag? :on_ground)&& (@vel[0]).abs > max_walk
       
       flag :double_jump if flag?(:on_ground)

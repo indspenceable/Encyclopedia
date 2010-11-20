@@ -12,9 +12,9 @@ module Model
       flag @direction
       super
       unflag @direction
-      if flag? :push_right
+      if flag? :push_left
         @direction = :right 
-      elsif flag? :push_left
+      elsif flag? :push_right
         @direction = :left
       end
     end

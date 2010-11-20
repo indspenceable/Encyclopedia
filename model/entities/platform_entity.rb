@@ -97,17 +97,17 @@ module Model
         unless @level.occupied?(tile_new_x,tile_old_y) || @level.occupied?(tile_new_x,tile_old_y_plus)
 
           #are we pushing?
-          if (flag? :push_right) && !(flag? :on_ground) && vel[0]< 10
+          if (flag? :push_left) && !(flag? :on_ground) && vel[0]< 10
             #don't move
           else
             @pos[0] = new_x 
-            unflag :push_left
             unflag :push_right
+            unflag :push_left
           end
         else
           @pos[0] = (tile_new_x-my_width)*tw
           @vel[0] = 0
-          flag :push_left
+          flag :push_right
         end
       elsif @vel[0] < 0
         new_x = (@pos[0] + @vel[0])
@@ -116,16 +116,17 @@ module Model
         tile_old_y_plus = ((pos[1]/th)+0.85)
         unless @level.occupied?(tile_new_x,tile_old_y) || @level.occupied?(tile_new_x,tile_old_y_plus)
           @pos[0] = new_x 
-          unflag :push_right
           unflag :push_left
+          unflag :push_right
         else
           @pos[0] = (tile_new_x+1)*tw
           @vel[0] = 0
-          flag :push_right
+          flag :push_left
         end
       else
-        unflag :push_right
+        #TODO - only unflag if we aren't up against a wall.
         unflag :push_left
+        unflag :push_right
       end
     end
 
