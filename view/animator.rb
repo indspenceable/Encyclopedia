@@ -18,18 +18,16 @@ module View
     def transition
      
     end
-
     def load_sprites image_name, tile_size, animation_hash
       surf = Rubygame::Surface.load("assets/#{image_name}")
       reverse_surf = (Rubygame::Surface.new [surf.w,surf.h], surf.depth, surf.flags).to_display_alpha
-
 
       (surf.w.to_f/tile_size[0]).ceil.times do |x|
         (surf.h.to_f/tile_size[1]).ceil.times do |y|
           yield
           tmp_surf = (Rubygame::Surface.new tile_size, surf.depth, surf.flags).to_display_alpha
           #puts "tmp at is #{tmp_surf.get_at(0,0).inspect} it should be epmty"if x == 0 && y == 0
-          tmp_surf.set_at([0,0],[0,0,0,0])
+          #tmp_surf.set_at([0,0],[0,0,0,0])
           #puts "now tmp at is #{tmp_surf.get_at(0,0).inspect} now it should be transpaerent"if x == 0 && y == 0
 
           surf.blit(tmp_surf, [0,0], [x*tile_size[0],y*tile_size[1],tile_size[0],tile_size[1]])
@@ -45,8 +43,6 @@ module View
           zoom = tmp_surf.zoom([-1,1])
           #puts "zoom has #{zoom.get_at(tmp_surf.w-1,0).inspect}" if x==0 && y == 0
           zoom.blit(reverse_surf, [x*tile_size[0],y*tile_size[1]])
-
-
 
           zoom.w.times do |cx|
             zoom.h.times do |cy|
@@ -66,6 +62,7 @@ module View
         @animations[k] = [surf, reverse_surf, pos, len, ticks_per_frame]
       end
     end
+
     def tile_set image_name, tile_size, auto_tiles_hash
       surf = Rubygame::Surface.load("assets/#{image_name}")
       xs = [0,BORDER_LEFT,BORDER_LEFT|BORDER_RIGHT,BORDER_RIGHT]

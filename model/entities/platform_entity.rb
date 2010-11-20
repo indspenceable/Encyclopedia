@@ -3,19 +3,29 @@ module Model
   class PlatformEntity < Entity
     attr_accessor :pos, :direction
     attr_accessor :level
-
-    GRAVITY = 0.02
-    #can jump 2.5 blocks
+    attr_accessor :vel
      
-    JUMP_HEIGHT = 3
-    JUMP = -Math.sqrt(2.0*GRAVITY*JUMP_HEIGHT) -GRAVITY
-    def jump_strength
-      th * (-Math.sqrt(2.0*GRAVITY*JUMP_HEIGHT) -GRAVITY)
+    #THIS IS WHAT YOU OVERRIDE
+    def my_jump_strength
+      2.3*th
     end
-#    JUMP = 
-      # y = starty(0) -JUMP*t +GRAVITY*t^2
-#      y = ((x^2)-JUMP(x)-JUMP^2/4)*GRAVITY + (JUMP^2/4)*GRAVITY
+    def gravity
+      0.003*th
+    end
+    def jump_strength
+      (-Math.sqrt(2.0*gravity*my_jump_strength) - gravity)
+    end
 
+    def max_speed
+      tiles_per_second = 5*tw
+      tiles_per_second/30.0
+    end
+    def move_speed
+      (max_speed/dampening)-max_speed
+    end
+    def dampening
+      0.7
+    end
 
     def initialize model, current_level, pos
       @vel = [0,0]
@@ -85,9 +95,15 @@ module Model
         tile_old_y = (pos[1]/th)
         tile_old_y_plus = ((pos[1]/th)+0.85)
         unless @level.occupied?(tile_new_x,tile_old_y) || @level.occupied?(tile_new_x,tile_old_y_plus)
-          @pos[0] = new_x 
-          unflag :push_left
-          unflag :push_right
+
+          #are we pushing?
+          if (flag? :push_right) && !(flag? :on_ground) && vel[0]< 10
+            #don't move
+          else
+            @pos[0] = new_x 
+            unflag :push_left
+            unflag :push_right
+          end
         else
           @pos[0] = (tile_new_x-my_width)*tw
           @vel[0] = 0
@@ -116,11 +132,11 @@ module Model
     def move
       flag :move
       if flag? :right
-        @vel[0] += 0.9
+        @vel[0] += move_speed
         @direction = :right
       end
       if flag? :left
-        @vel[0] -= 0.9
+        @vel[0] -= move_speed
         @direction = :left
       end
     end
@@ -129,8 +145,8 @@ module Model
         @vel[1] /= 2
       end
       if @vel[0] != 0 
-        @vel[0] = @vel[0]*4/6.0
-        @vel[0] = 0 if @vel[0] > -0.5 && @vel[0] < 0.5
+        @vel[0] = @vel[0]*dampening
+        @vel[0] = 0 if @vel[0] > -dampening/5 && @vel[0] < dampening/5
       end
       2.times do |i|
         if @vel[i] > @level.TILE_SIZE[i]
@@ -148,7 +164,7 @@ module Model
       end
     end
     def apply_gravity
-      @vel[1] += GRAVITY
+      @vel[1] += gravity
     end
     def tick 
       apply_gravity

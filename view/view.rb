@@ -13,7 +13,7 @@ module View
     def initialize screen_size, background
       @screen = Rubygame::Screen.new screen_size
       @screen.fill background
-      #@buffer = Rubygame::Surface.new [screen_size[0]*2, screen_size[1]*2]
+      @buffer = Rubygame::Surface.new [screen_size[0]*2, screen_size[1]*2]
      
       @background = background
 
@@ -32,15 +32,25 @@ module View
                         :star => [[2,3],4,7],
                         :punch => [[2,4],4,7],
                         :sign => [[4,0],1,1],
-                        :door => [[5,0],1,1]
+                        :door => [[5,0],1,1],
+                        :dust => [[0,4],4,3]
       }) do
         @screen.update
       end
+      @animator.load_sprites('player.png',
+                             [16,16],
+                             { :walk => [[2,2],4,12],
+                               :fall => [[7,1],2,12],
+                               :jump => [[9,1],2,12] }) do
+        @screen.update
+        print "."
+                               end
+      puts "" 
       @animator.load_font('font.ttf',:font,12)
 
       @animator.tile_set('tiles.png',
                          [16,16],
-                         { :full => [0,0],
+                         { :full => [4,4],
                            :empty => [4,0]})
       @view_box =  [30, screen_size[1]-200-30, screen_size[0]-60,200]
       @scroll_offset = [0,0]
@@ -57,7 +67,7 @@ module View
         y = (current+k)/level.Width
         x = (current+k) % level.Width;
         a = [16*x, 16*y]
-          current_tile = level.tile_at(x,y)
+        current_tile = level.tile_at(x,y)
         borders = 0
         borders |= BORDER_UP if (y > 0) && level.tile_at(x,y-1) == current_tile
         borders |= BORDER_DOWN if (y < level.Height-1) && level.tile_at(x,y+1) == current_tile
@@ -102,7 +112,7 @@ module View
     def set_scroll_location model, level_tile_size
       @scroll_offset[0] = -model.focal_point[0]
       @scroll_offset[1] = -model.focal_point[1]
-    
+
       2.times do |x|
         @scroll_offset[x] = @scroll_offset[x]/level_tile_size[x] * 16
       end
@@ -140,6 +150,7 @@ module View
     def draw model
       #TODO - clean into multiple methods
       @screen.fill @background
+      @buffer.fill @background
 
 
       #unless @level_surfs[model.level]
@@ -153,21 +164,23 @@ module View
       set_scroll_location model, model.level.TILE_SIZE
 
       draw_level model.level
-      @level_surfs[model.level].blit(@screen,@scroll_offset)
+      @level_surfs[model.level].blit(@buffer,@scroll_offset)
 
       model.level.statics.each do |s|
         @animator.animate(s, 
                           s.current_animation, 
-                          @screen, 
+                          @buffer, 
                           convert_pos(s,s.pos,model.level.TILE_SIZE), 
                           s.direction==:left, 
                           s.animate || model.display_string)
       end
 
+      vel = 0
       model.level.entities.each do |e|
+        vel = e.vel
         @animator.animate(e, 
                           e.current_animation, 
-                          @screen, 
+                          @buffer, 
                           convert_pos(e,e.pos,model.level.TILE_SIZE), 
                           e.direction==:left, 
                           model.display_string)
@@ -175,18 +188,18 @@ module View
 
       @effects += model.get_effects
       @effects.each do |e|
-        @to_delete << e if @animator.animate(e, e[0], @screen, convert_pos(e, e[1],model.level.TILE_SIZE), e[2]==:left, model.display_string)
+        @to_delete << e if @animator.animate(e, e[0], @buffer, convert_pos(e, e[1],model.level.TILE_SIZE), e[2]==:left, model.display_string)
       end
       @effects -= @to_delete
       @to_delete.clear
 
       if model.display_string
         x,y,w,h = @view_box
-        @screen.draw_box_s([x,y],[x+w,y+h],[0,255,255]) 
-        @animator.text(model.display_string, :font, @screen, @view_box)
+        @buffer.draw_box_s([x,y],[x+w,y+h],[0,255,255]) 
+        @animator.text(model.display_string, :font, @buffer, @view_box)
       end
 
-      #@buffer.blit(@screen,[0,0])
+      @buffer.blit(@screen,[0,0])
       @screen.update
     end
   end

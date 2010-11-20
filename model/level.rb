@@ -1,7 +1,7 @@
 require 'YAML'
 module Model
   class Level
-    TILE_SIZE = [20,1]
+    TILE_SIZE = [300,300]
     def TILE_SIZE
       TILE_SIZE
     end

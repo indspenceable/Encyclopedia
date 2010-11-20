@@ -2,10 +2,11 @@ require 'rubygame'
 require 'YAML'
 require 'set'
 
-LEVEL_PATH = "./editor/levels/"
 
 X_SIZE = 200
 Y_SIZE = 200
+
+I_QUIT = Class.new(RuntimeError)
 
 class Editor
   attr_accessor :th, :tw
@@ -24,7 +25,9 @@ class Editor
   end
 
   Rules = { (/\Aread_(.*)\z/) => [->(match){'on_activation(pos, :text)'}, '"This sign appears to be blank."'],
-    (/\Aspawn_(.*)\z/) => [->(match){ "spawn(Model::#{match[1].capitalize}, pos)"}, "" ] }
+    (/\Aspawn_(.*)\z/) => [->(match){ "spawn(Model::#{match[1].capitalize}, pos)"}, "" ],
+    (/\Adoor_to_(.*)_at_(.*)\z/) => [->(match){ "on_activation(pos)"}, "@model.goto(:#{match[1]},:#{match[2]})" ],
+  }
 
   def save
     Dir.mkdir "#{LEVEL_PATH}#{ARGV[0]}" unless File.directory?("#{LEVEL_PATH}#{ARGV[0]}")
@@ -44,7 +47,7 @@ class Editor
               any = true
             end
           end
-          file << "Enter the code for this event here.\n" unless any
+          file << "# Enter the code for this event here.\n" unless any
           file << "end"
         end
       end
@@ -110,7 +113,7 @@ class Editor
   end
 
   def process_event e
-    raise "goodbye!" if e.is_a? Rubygame::Events::QuitRequested
+    raise I_QUIT.new if e.is_a? Rubygame::Events::QuitRequested
     if e.is_a?(Rubygame::Events::KeyPressed) && @mode == :edit
       edit_keypress e
     elsif e.is_a?(Rubygame::Events::KeyPressed) && @mode == :script
@@ -124,7 +127,6 @@ class Editor
   end
 
   def edit
-    puts "HI"
     @screen = Rubygame::Screen.new [640,480]
     (events = Rubygame::EventQueue.new).enable_new_style_events
     @selector = Rubygame::Surface.load('./editor/selector.png')
@@ -184,14 +186,9 @@ class Editor
       @screen.update
 
     end
+  rescue I_QUIT
   ensure
     Rubygame.quit
   end
-end
-
-if ARGV.length != 1
-  puts "you just put in a level name. Thats it. come on!"
-else
-  Editor.new.edit
 end
 

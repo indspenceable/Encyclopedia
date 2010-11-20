@@ -21,6 +21,5 @@ module Model
       super
       unflag :jump
     end
-
   end
 end

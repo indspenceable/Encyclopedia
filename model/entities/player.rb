@@ -8,8 +8,27 @@ module Model
     react_to :key_pressed_z, ->(_){ flag :punch }
     react_to :key_down_space, ->(_){flag :grab}
     react_to [:key_down_right, :key_down_left], ->(key){ flag key }
-    react_to :key_down_p, ->(_){ @model.display_string = "Hello" }
     react_to :key_pressed_up, ->(_){ @level.activate_at(convert_pos(@pos)) }
+    react_to :key_down_r, ->(_){flag :run}
+
+    def max_walk
+      5
+    end
+    def max_run
+      7
+    end
+    def max_speed
+      tiles_per_second = ((flag? :run) ? max_run : max_walk )*tw
+      tiles_per_second/30.0
+    end
+  
+    def dampening
+      if flag? :on_ground
+        super
+      else
+        0.8
+      end
+    end
 
     def current_animation
       if flag? :climb
@@ -20,10 +39,10 @@ module Model
         :slide
       elsif @vel[1] < 0
         #jump
-        :walk
+        :jump
       elsif @vel[1] > 0
         #fall
-        :walk
+        :fall
       elsif @vel[0] > 0
         :walk
       elsif @vel[0] < 0
@@ -38,19 +57,23 @@ module Model
           @vel[1] = jump_strength
           unflag :last_jump_left
           unflag :last_jump_right
+          return
         elsif (flag? :push_right) || (flag? :push_left)
           if (flag? :push_right)&& (!flag? :last_jump_right)
             @vel[1] = jump_strength
             unflag :last_jump_left
             flag :last_jump_right
             @model.add_effect([:star, @pos.dup, true])
+            return
           elsif (flag? :push_left) && (!flag? :last_jump_left)
             @vel[1] = jump_strength
             @model.add_effect([:star, @pos.dup, true])
             unflag :last_jump_right
             flag :last_jump_left
+            return
           end
-        elsif (flag? :double_jump)
+        end
+        if (flag? :double_jump)
           @vel[1] = jump_strength
           @model.add_effect([:bounce, @pos.dup, @direction])
           unflag :double_jump
@@ -60,7 +83,7 @@ module Model
     def apply_gravity
       unless (flag? :grab)&&(flag? :touch_cieling)
         unflag :climb
-        @vel[1] += GRAVITY 
+        @vel[1] += gravity
       else
         flag :climb
         @vel[1] = -0.1
@@ -72,10 +95,11 @@ module Model
         npos = @pos.dup
         @model.add_effect [:punch, @pos.dup, @direction]
       end
-      
       @model.add_effect [:static, @pos.dup, @direction] if (flag? :push_left)||(flag? :push_right)
+      @model.add_effect [:dust, @pos.dup, @direction] if (flag? :on_ground)&& (@vel[0]).abs > max_walk
+      
       flag :double_jump if flag?(:on_ground)
-      [:grab,:jump, :unjump, :left, :right, :punch].each do |k|
+      [:run, :grab,:jump, :unjump, :left, :right, :punch].each do |k|
         unflag k
       end
     end
